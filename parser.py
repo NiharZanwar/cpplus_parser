@@ -52,7 +52,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024)
         # print("{} wrote:".format(self.client_address[0]))
-        # print(self.data)
+
         handle_data(self.data, self.client_address[0])
 
 
