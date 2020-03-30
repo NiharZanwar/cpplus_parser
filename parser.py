@@ -48,6 +48,7 @@ def handle_data(data, dvr_ip):
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
 
+
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024)
