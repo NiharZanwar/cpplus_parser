@@ -1,0 +1,8 @@
+dvr_id, dvr_ip, dvr_mac, alarm_code_01, alarm_code_02...
+	1		ip     mac       unique_id
+
+
+
+dvr-alarm_id channel_01 channel_02 channel_03
+  unique_id    true       false      true
+
