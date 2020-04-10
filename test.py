@@ -58,7 +58,7 @@ def add_device(sql_details, tag, active_status, ip, rcvd_str, create_dt):
                 "VALUES ('{}','{}','{}','{}','{}','{}')".format(str(tag), str(active_status), str(ip),
                                                                 str(rcvd_str), str(create_dt), str(create_dt)))
             connection.commit()
-            print(cursor.lastrowid)
+            # print(cursor.lastrowid)
             connection.close()
             return int(cursor.lastrowid)
         except pymysql.Error as e:
@@ -116,7 +116,7 @@ def add_alarm(sql_details, device_id, channel_no, alarm_code, alarm_name, alarm_
                                                                      str(alarm_code), str(create_dt), str(create_dt),
                                                                      str(alarm_name)))
             connection.commit()
-            print(cursor.lastrowid)
+            # print(cursor.lastrowid)
             connection.close()
             return int(cursor.lastrowid)
         except pymysql.Error as e:
@@ -172,7 +172,185 @@ def add_transaction(sql_details, date_time, device_id, alarm_id, channel_no, ala
             return 0
 
 
-# from datetime import datetime
-# sql_details = get_sql_details()
+def update_alarm(sql_details, device_id, alarm_code, alarm_status, channel_no, data_time):
+    connection = sql_connection(sql_details)
+    if connection == 0:
+        print("error while connectiong to database")
+        return 0
+    else:
+        try:
+            cursor = connection.cursor()
+            cursor.execute(
+                "UPDATE `alarm_table` SET `alarm_state`='{}' , `last_update_dt`='{}' WHERE `device_id`='{}' AND"
+                "`alarm_code`='{}' AND `channel_no`='{}'".format(str(alarm_status), str(data_time), str(device_id)
+                                                                 , str(alarm_code), str(channel_no)))
+            connection.commit()
+            connection.close()
+            return 1
+        except pymysql.Error as e:
+            print("error : {} while updating datetime for tag".format(str(e)))
+            return 0
+
+
+alarm_master = {
+    4: {
+        "name": "video mask",
+        "channel_specific": True
+    },
+    5: {
+        "name":"video tamper",
+        "channel_specific": True
+    },
+    6: {
+        "name":"invalid_login",
+        "channel_specific": False
+    }
+}
+
+
+def process_data(sql_details, alarm_channel, time, alarm_code, tag, channel_string, extra_data, dvr_ip, data):
+
+    device_info, success = get_device_info(sql_details, tag)
+    if success == 0:
+        return 200
+    if len(device_info) == 0:
+        device_id = add_device(sql_details, tag, 0, dvr_ip, data, time)
+        if device_id == 0:
+            return 201
+    else:
+        if device_info['is_active'] == 0:
+            if update_dt(sql_details, tag, time) == 0:
+                return 202
+            else:
+                return 100
+        else:
+            alarm_info, success = get_alarm_info(sql_details, device_info["device_id"], 1, alarm_code)
+            if success == 0:
+                return 203
+            if len(alarm_info) == 0:
+
+                for alarm in alarm_master:
+
+                    if not alarm_master[alarm]["channel_specific"]:
+                        add_alarm(sql_details, device_info["device_id"], 0, alarm, alarm_master[alarm]["name"],0,time)
+                    else:
+                        for i in range(1, device_info["channel_no"]+1):
+                            add_alarm(sql_details, device_info["device_id"], i, alarm, alarm_master[alarm]["name"], 0, time)
+
+                for i in range(31, 31 - device_info['channel_no'], -1):
+                    if update_alarm(sql_details, device_info['device_id'], alarm_code, channel_string[i], 32 - i,
+                                    time) == 0:
+
+                        return 0
+
+                return 0
+            else:
+                if device_info['channel_no'] is None:
+                    return 0
+                else:
+                    if not alarm_master[alarm_code]["channel_specific"]:
+                        if update_alarm(sql_details, device_info['device_id'], alarm_code, 1, 0, time) == 0:
+                            return 0
+                    for i in range(31, 31 - device_info['channel_no'], -1):
+                        if update_alarm(sql_details, device_info['device_id'], alarm_code, channel_string[i], 32-i, time) == 0:
+                            return 0
+
+
+def process_data2(sql_details, alarm_channel, time, alarm_code, tag, channel_string, extra_data, dvr_ip, data):
+    channel_string = channel_string[::-1]
+    device_info, success = get_device_info(sql_details, tag)
+
+    if success == 0:
+        return 200
+
+    if len(device_info) == 0:
+        if add_device(sql_details, tag, 0, dvr_ip, data, time) == 0:
+            return 201
+        else:
+            return 100
+
+
+    else:
+        device_info = device_info[0]
+        if device_info['is_active'] == 0:
+            if update_dt(sql_details, tag, time) == 0:
+                return 202
+            else:
+                return 101
+
+        elif device_info['is_active'] == 1 and device_info['channel_no'] is not None:
+            alarm_info, success = get_alarm_info(sql_details, device_info["device_id"], 1, alarm_code)
+            if success == 0:
+                return 203
+
+            if len(alarm_info) == 0:
+                for alarm in alarm_master:
+
+                    if not alarm_master[alarm]["channel_specific"]:
+                        alarm_id = add_alarm(sql_details, device_info["device_id"], 0, alarm,
+                                             alarm_master[alarm]["name"], 0, time)
+                        if alarm_id is not 0 and int(alarm_code) == alarm:
+
+                            update_alarm(sql_details, device_info['device_id'], alarm, 0, 0, time)
+                            add_transaction(sql_details, time, device_info['device_id'], alarm_id, 0, alarm_code,
+                                            alarm_master[alarm]["name"], 0)
+
+                        elif alarm_id == 0:
+                            return 204
+
+                    else:
+                        for i in range(1, device_info["channel_no"] + 1):
+                            alarm_id = add_alarm(sql_details, device_info["device_id"], i, alarm,
+                                                 alarm_master[alarm]["name"], 0, time)
+
+                            if alarm_id is not 0 and int(alarm_code) == alarm:
+                                update_alarm(sql_details, device_info['device_id'], alarm, channel_string[i-1], i, time)
+                                add_transaction(sql_details, time, device_info['device_id'], alarm_id, i, alarm_code,
+                                                alarm_master[alarm]["name"], channel_string[i-1])
+
+                            elif alarm_id == 0:
+                                return 205
+
+            else:
+                alarm_info = alarm_info[0]
+                for i in range(1, device_info['channel_no']+1):
+                    alarm_info, success = get_alarm_info(sql_details, device_info['device_id'], i, alarm_code)
+                    if success == 0:
+                        return 206
+                    alarm_info = alarm_info[0]
+                    if alarm_master[int(alarm_code)]["channel_specific"]:
+                        if alarm_info['alarm_state'] != int(channel_string[i-1]):
+                            if update_alarm(sql_details, device_info['device_id'], alarm_code, channel_string[i-1], i,
+                                            time) == 0:
+                                return 207
+                            if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], i,
+                                               alarm_code,
+                                               alarm_master[alarm_code]["name"], channel_string[i-1]) == 0:
+                                return 208
+
+                    else:
+                        if update_alarm(sql_details, device_info['device_id'], alarm_code, 0, 0,
+                                        time) == 0:
+                            return 207
+                        if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], 0,
+                                           alarm_code,
+                                           alarm_master[alarm_code]["name"], 0) == 0:
+                            return 208
+    return 500
+
+
+
+
+from datetime import datetime
+sql_details1 = get_sql_details()
+
+result = process_data2(sql_details1,0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),5,12347,'00000000000000000000000000001111','11','192.168.1.11','uyuy')
+print(result)
 # result = add_transaction(sql_details, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 4, 2, 4, 45, 'nihar', 1)
 # print(result)
+# device_info, success = get_device_info(sql_details, '123')
+# print(type(device_info[0]['is_active']))
+# result = update_alarm(sql_details, 2, 34, 1, 3, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+# print(result)
+
+# print(get_device_info(sql_details,'123')[0][0]['model_no']==None)
