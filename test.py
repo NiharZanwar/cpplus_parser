@@ -269,6 +269,10 @@ def process_data2(sql_details, alarm_channel, time, alarm_code, tag, channel_str
         else:
             return 100
 
+    if int(alarm_code) not in alarm_master:
+        if update_dt(sql_details, tag, time) == 0:
+            return 202
+        return 209
 
     else:
         device_info = device_info[0]
@@ -304,7 +308,8 @@ def process_data2(sql_details, alarm_channel, time, alarm_code, tag, channel_str
                                                  alarm_master[alarm]["name"], 0, time)
 
                             if alarm_id is not 0 and int(alarm_code) == alarm:
-                                update_alarm(sql_details, device_info['device_id'], alarm, channel_string[i-1], i, time)
+                                if update_alarm(sql_details, device_info['device_id'], alarm, channel_string[i-1], i, time) == 0:
+                                    return 301
                                 add_transaction(sql_details, time, device_info['device_id'], alarm_id, i, alarm_code,
                                                 alarm_master[alarm]["name"], channel_string[i-1])
 
@@ -312,7 +317,7 @@ def process_data2(sql_details, alarm_channel, time, alarm_code, tag, channel_str
                                 return 205
 
             else:
-                alarm_info = alarm_info[0]
+
                 for i in range(1, device_info['channel_no']+1):
                     alarm_info, success = get_alarm_info(sql_details, device_info['device_id'], i, alarm_code)
                     if success == 0:
@@ -342,15 +347,12 @@ def process_data2(sql_details, alarm_channel, time, alarm_code, tag, channel_str
 
 
 from datetime import datetime
+import time
 sql_details1 = get_sql_details()
-
-result = process_data2(sql_details1,0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),5,12347,'00000000000000000000000000001111','11','192.168.1.11','uyuy')
+time_now = time.time()
+result = process_data2(sql_details1,0,datetime.now().strftime("%Y-%m-%d %H:%M:%S"),5,12345,'00000100000000000000000000011111','11','192.168.1.11','uyuy')
+print(time.time()-time_now)
 print(result)
-# result = add_transaction(sql_details, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 4, 2, 4, 45, 'nihar', 1)
-# print(result)
-# device_info, success = get_device_info(sql_details, '123')
-# print(type(device_info[0]['is_active']))
-# result = update_alarm(sql_details, 2, 34, 1, 3, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-# print(result)
 
-# print(get_device_info(sql_details,'123')[0][0]['model_no']==None)
+
+
