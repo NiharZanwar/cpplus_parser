@@ -2,6 +2,9 @@ import socketserver
 import pymysql
 import configparser
 
+from test import *
+
+
 
 
 def make_log(string):
@@ -14,7 +17,7 @@ def get_alarm_list(alarm_int):
     return str(bin(alarm_int))[2:].zfill(32)
     
 
-def print_data(channel_int, date_time, alarm_type, domain, channel_string, extra_data, ip, data):
+def print_data(channel_int, date_time, alarm_type, domain, channel_string, extra_data, ip, data, sql_result):
     make_log("-----------------------------")
     print("-----------------------------")
     make_log(data)
@@ -33,6 +36,8 @@ def print_data(channel_int, date_time, alarm_type, domain, channel_string, extra
     print("Extra data : " + extra_data)
     make_log("channel int : " + channel_int)
     print("channel int : " + channel_int)
+    make_log("result : " + str(sql_result))
+    print("result : " + str(sql_result))
 
 
 def handle_data(data, dvr_ip):
@@ -47,7 +52,10 @@ def handle_data(data, dvr_ip):
     channel_string = get_alarm_list(int(alarm_channel))
     domain = domain.split(':')[1]
     time = time.replace('Time:', '')
-    print_data(alarm_channel, time, str(alarm_type), domain, channel_string, str(extra_data), dvr_ip, str(data))
+    sql_details = get_sql_details()
+    result = process_data2(sql_details, alarm_channel, time, int(alarm_type), domain, channel_string, extra_data, dvr_ip, str_data)
+    print(result)
+    print_data(alarm_channel, time, str(alarm_type), domain, channel_string, str(extra_data), dvr_ip, str(data), result)
 
 
 class MyTCPHandler(socketserver.BaseRequestHandler):
