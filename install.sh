@@ -1,4 +1,5 @@
 #!/bin/bash
+mkdir /data/log
 cd /app
 git clone https://github.com/NiharZanwar/cpplus_parser.git
 cd cpplus_parser
