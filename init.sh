@@ -1,7 +1,7 @@
 #!/bin/bash
 mkdir sql-data python-data
 
-sudo docker network create -d bridge dvr-network
+sudo docker network create -d bridge alarm-network
 
 sudo docker run -d --restart always -p 33067:3306 --name alarm-mysql -v `pwd`/sql-data:/var/lib/mysql \
 -v `pwd`/mysql-scripts:/docker-entrypoint-initdb.d/ \
