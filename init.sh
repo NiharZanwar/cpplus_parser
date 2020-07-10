@@ -14,3 +14,4 @@ sudo docker run -d --restart always -p 5050:5001 --name alarm-server-container -
 
 sudo cp config.conf python-data/config.conf
 
+

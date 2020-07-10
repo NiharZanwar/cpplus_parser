@@ -56,6 +56,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
     def handle(self):
         self.data = self.request.recv(1024)
         handle_data(self.data, self.client_address[0])
+        print(self.client_address[0])
+        print(self.data)
 
 
 if __name__ == "__main__":

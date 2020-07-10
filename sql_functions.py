@@ -6,7 +6,7 @@ from datetime import datetime
 
 def log_error(string, time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")):
     string += "\n\n"
-    with open(log_dir + "error_log.txt", "a") as f:
+    with open(log_dir + "/error_log.txt", "a+") as f:
         f.write(time + ' : ' + string)
 
 
