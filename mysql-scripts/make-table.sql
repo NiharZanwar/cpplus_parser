@@ -1,5 +1,5 @@
 
-create table device_table
+create table cpplus_device_dvr
 (
     device_id      int auto_increment
         primary key,
@@ -19,7 +19,7 @@ create table device_table
         unique (tag)
 );
 
-create table alarm_table
+create table cpplus_alarm_dvr
 (
     alarm_id       int auto_increment
         primary key,
@@ -32,13 +32,13 @@ create table alarm_table
     create_dt      datetime    null,
     last_update_dt datetime    null,
     constraint device_id
-        foreign key (device_id) references device_table (device_id)
+        foreign key (device_id) references cpplus_device_dvr (device_id)
 );
 
 create index device_id_idx
-    on alarm_table (device_id);
+    on cpplus_alarm_dvr (device_id);
 
-create table txn_table
+create table cpplus_txn_dvr
 (
     date_time   datetime    not null,
     device_id   int         not null,
