@@ -6,7 +6,7 @@ from datetime import datetime
 
 def log_error(string, time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")):
     string += "\n\n"
-    with open(log_dir + "error_log.txt", "a") as f:
+    with open(log_dir + "/error_log.txt", "a+") as f:
         f.write(time + ' : ' + string)
 
 
@@ -32,7 +32,8 @@ def get_sql_details():
                 "port": int(config["mysql"]["port"]),
                 "username": config["mysql"]["uname"],
                 "password": config["mysql"]["password"],
-                "db_name": config["mysql"]["db_name"]
+                "db_name": config["mysql"]["db_name"],
+                "http": config["send_to"]["path"]
             }
             return details
         except Exception as e:
@@ -63,7 +64,7 @@ def add_device(sql_details, tag, active_status, ip, rcvd_str, create_dt):
         try:
             cursor = connection.cursor()
             cursor.execute(
-                "INSERT INTO `device_table`(`tag`, `is_active`, `ip`, `rcvd_str`, `create_dt`, `last_update_dt`)"
+                "INSERT INTO `cpplus_device_dvr`(`tag`, `is_active`, `ip`, `rcvd_str`, `create_dt`, `last_update_dt`)"
                 "VALUES ('{}','{}','{}','{}','{}','{}')".format(str(tag), str(active_status), str(ip),
                                                                 str(rcvd_str), str(create_dt), str(create_dt)))
             connection.commit()
@@ -82,7 +83,7 @@ def get_device_info(sql_details, tag):
     else:
         try:
             cursor = connection.cursor()
-            cursor.execute("SELECT * FROM `device_table` WHERE tag='{}'".format((str(tag))))
+            cursor.execute("SELECT * FROM `cpplus_device_dvr` WHERE tag='{}'".format((str(tag))))
             response = cursor.fetchall()
             connection.close()
             return response, 1
@@ -99,8 +100,8 @@ def update_dt(sql_details, tag, date_time):
     else:
         try:
             cursor = connection.cursor()
-            cursor.execute("UPDATE `device_table` SET `last_update_dt`='{}' WHERE `tag`='{}'".format(str(date_time)
-                                                                                                     , str(tag)))
+            cursor.execute("UPDATE `cpplus_device_dvr` SET `last_update_dt`='{}' WHERE `tag`='{}'".format(str(date_time)
+                                                                                                          , str(tag)))
             connection.commit()
             connection.close()
             return 1
@@ -109,7 +110,7 @@ def update_dt(sql_details, tag, date_time):
             return 0
 
 
-def add_alarm(sql_details, device_id, channel_no, alarm_code, alarm_name, alarm_status, create_dt):
+def add_alarm(sql_details, device_id, channel_no, alarm_code, alarm_name, alarm_status, create_dt, panel_code):
     connection = sql_connection(sql_details)
     if connection == 0:
         log_error("error while connecting to database in add_alarm function ")
@@ -118,11 +119,13 @@ def add_alarm(sql_details, device_id, channel_no, alarm_code, alarm_name, alarm_
         try:
             cursor = connection.cursor()
             cursor.execute(
-                "INSERT INTO `alarm_table`(`device_id`, `alarm_state`, `channel_no`, `alarm_code`, `create_dt`,"
-                " `last_update_dt`,`alarm_name`)"
-                "VALUES ('{}','{}','{}','{}','{}','{}','{}')".format(str(device_id), str(alarm_status), str(channel_no),
-                                                                     str(alarm_code), str(create_dt), str(create_dt),
-                                                                     str(alarm_name)))
+                "INSERT INTO `cpplus_alarm_dvr`(`device_id`, `alarm_state`, `channel_no`, `alarm_code`, `create_dt`,"
+                " `last_update_dt`,`alarm_name`, `panel_code`)"
+                "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(str(device_id), str(alarm_status),
+                                                                          str(channel_no),
+                                                                          str(alarm_code), str(create_dt),
+                                                                          str(create_dt),
+                                                                          str(alarm_name), str(panel_code)))
             connection.commit()
             # print(cursor.lastrowid)
             connection.close()
@@ -140,7 +143,7 @@ def get_alarm_info(sql_details, device_id, channel_no, alarm_code):
     else:
         try:
             cursor = connection.cursor()
-            cursor.execute("SELECT * FROM `alarm_table` WHERE device_id='{}' AND channel_no='{}'"
+            cursor.execute("SELECT * FROM `cpplus_alarm_dvr` WHERE device_id='{}' AND channel_no='{}'"
                            " AND alarm_code='{}'".format(str(device_id), str(channel_no), str(alarm_code)))
             response = cursor.fetchall()
             connection.close()
@@ -150,7 +153,8 @@ def get_alarm_info(sql_details, device_id, channel_no, alarm_code):
             return '', 0
 
 
-def add_transaction(sql_details, date_time, device_id, alarm_id, channel_no, alarm_code, alarm_name, alarm_state):
+def add_transaction(sql_details, date_time, device_id, alarm_id, channel_no, alarm_code, alarm_name, alarm_state,
+                    alarm_sent):
     connection = sql_connection(sql_details)
     if connection == 0:
         log_error("error while connecting to database in add_transaction function ")
@@ -159,11 +163,13 @@ def add_transaction(sql_details, date_time, device_id, alarm_id, channel_no, ala
         try:
             cursor = connection.cursor()
             cursor.execute(
-                "INSERT INTO `txn_table`(`device_id`, `alarm_state`, `channel_no`, `alarm_code`, `alarm_name`,"
-                "`date_time`, `alarm_id`)"
-                "VALUES ('{}','{}','{}','{}','{}','{}','{}')".format(str(device_id), str(alarm_state), str(channel_no),
-                                                                     str(alarm_code), str(alarm_name), str(date_time),
-                                                                     str(alarm_id)))
+                "INSERT INTO `cpplus_txn_dvr`(`device_id`, `alarm_state`, `channel_no`, `alarm_code`, `alarm_name`,"
+                "`date_time`, `alarm_id`, `alarm_sent`)"
+                "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(str(device_id), str(alarm_state),
+                                                                          str(channel_no),
+                                                                          str(alarm_code), str(alarm_name),
+                                                                          str(date_time),
+                                                                          str(alarm_id), str(alarm_sent)))
             connection.commit()
             connection.close()
             return 1
@@ -182,15 +188,46 @@ def update_alarm(sql_details, device_id, alarm_code, alarm_status, channel_no, d
         try:
             cursor = connection.cursor()
             cursor.execute(
-                "UPDATE `alarm_table` SET `alarm_state`='{}' , `last_update_dt`='{}' WHERE `device_id`='{}' AND"
+                "UPDATE `cpplus_alarm_dvr` SET `alarm_state`='{}' , `last_update_dt`='{}' WHERE `device_id`='{}' AND"
                 "`alarm_code`='{}' AND `channel_no`='{}'".format(str(alarm_status), str(data_time), str(device_id)
                                                                  , str(alarm_code), str(channel_no)))
             connection.commit()
             connection.close()
             return 1
         except pymysql.Error as e:
-            log_error("error while updating alarm in update_alarm function")
+            log_error("error while updating alarm in update_alarm function - {}".format(e))
             return 0
+
+
+def print_json(tag, time, eventcode, channel, alarm_state):
+    response = {
+        "HE": {
+            "ID": tag,
+        },
+        "TX": {
+            "DT": str(time),
+            "EN": "",
+            "CMNT": ""
+        }
+    }
+
+    if alarm_master[eventcode]['channel_specific']:
+
+        if int(alarm_state) == 1:
+            event = alarm_master[eventcode]["error_code"] + str(channel).zfill(3)
+            response["TX"]["EN"] = event
+            response["TX"]["CMNT"] = alarm_master[eventcode]["name"]
+        else:
+            event = alarm_master[eventcode]["ok_code"] + str(channel).zfill(3)
+            response["TX"]["EN"] = event
+            response["TX"]["CMNT"] = alarm_master[eventcode]["name"]
+    else:
+        event = alarm_master[eventcode]["eventcode"]
+        response["TX"]["EN"] = event
+        response["TX"]["CMNT"] = alarm_master[eventcode]["name"]
+
+    print(response)
+    return 1
 
 
 def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, data):
@@ -235,14 +272,21 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
 
                     if not alarm_master[alarm]["channel_specific"]:
                         alarm_id = add_alarm(sql_details, device_info["device_id"], 0, alarm,
-                                             alarm_master[alarm]["name"], 0, time)
+                                             alarm_master[alarm]["name"], 0, time, tag)
                         if alarm_id is not 0 and int(alarm_code) == alarm:
 
                             if update_alarm(sql_details, device_info['device_id'], alarm, 0, 0, time) == 0:
                                 return 206
-                            if add_transaction(sql_details, time, device_info['device_id'], alarm_id, 0, alarm_code,
-                                               alarm_master[alarm]["name"], 0) == 0:
-                                return 207
+
+                            if print_json(tag, time, alarm_code, 0, 1) == 0:
+                                if add_transaction(sql_details, time, device_info['device_id'], alarm_id, 0, alarm_code,
+                                                   alarm_master[alarm]["name"], 0, 0) == 0:
+                                    return 207
+
+                            else:
+                                if add_transaction(sql_details, time, device_info['device_id'], alarm_id, 0, alarm_code,
+                                                   alarm_master[alarm]["name"], 0, 1) == 0:
+                                    return 207
 
                         elif alarm_id == 0:
                             return 208
@@ -250,15 +294,23 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                     else:
                         for i in range(1, device_info["channel_no"] + 1):
                             alarm_id = add_alarm(sql_details, device_info["device_id"], i, alarm,
-                                                 alarm_master[alarm]["name"], 0, time)
+                                                 alarm_master[alarm]["name"], 0, time, tag)
 
                             if alarm_id is not 0 and int(alarm_code) == alarm:
                                 if update_alarm(sql_details, device_info['device_id'], alarm, channel_string[i - 1], i,
                                                 time) == 0:
                                     return 209
-                                if add_transaction(sql_details, time, device_info['device_id'], alarm_id, i, alarm_code,
-                                                   alarm_master[alarm]["name"], channel_string[i - 1]) == 0:
-                                    return 210
+                                if print_json(tag, time, alarm_code, i, channel_string[i - 1]) == 0:
+                                    if add_transaction(sql_details, time, device_info['device_id'], alarm_id, i,
+                                                       alarm_code,
+                                                       alarm_master[alarm]["name"], channel_string[i - 1], 0) == 0:
+                                        return 210
+
+                                else:
+                                    if add_transaction(sql_details, time, device_info['device_id'], alarm_id, i,
+                                                       alarm_code,
+                                                       alarm_master[alarm]["name"], channel_string[i - 1], 1) == 0:
+                                        return 210
 
                             elif alarm_id == 0:
                                 return 211
@@ -278,10 +330,20 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                             if update_alarm(sql_details, device_info['device_id'], alarm_code, channel_string[i - 1], i,
                                             time) == 0:
                                 return 213
-                            if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], i,
-                                               alarm_code,
-                                               alarm_master[alarm_code]["name"], channel_string[i - 1]) == 0:
-                                return 214
+
+                            if print_json(tag, time, alarm_code, i, channel_string[i - 1]) == 0:
+                                if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'],
+                                                   i,
+                                                   alarm_code,
+                                                   alarm_master[alarm_code]["name"], channel_string[i - 1], 0) == 0:
+                                    return 214
+
+                            else:
+                                if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'],
+                                                   i,
+                                                   alarm_code,
+                                                   alarm_master[alarm_code]["name"], channel_string[i - 1], 1) == 0:
+                                    return 214
 
                     else:
 
@@ -294,9 +356,16 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                                         time) == 0:
                             # TODO:finalize what to do for non channel specific alarms, whether to give alarm state 1
                             return 216
-                        if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], 0,
-                                           alarm_code,
-                                           alarm_master[alarm_code]["name"], 0) == 0:
-                            return 217
+                        if print_json(tag, time, alarm_code, 0, 1) == 0:
+                            if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], 0,
+                                               alarm_code,
+                                               alarm_master[alarm_code]["name"], 0, 0) == 0:
+                                return 217
+
+                        else:
+                            if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], 0,
+                                               alarm_code,
+                                               alarm_master[alarm_code]["name"], 0, 1) == 0:
+                                return 217
                         break
     return 500
