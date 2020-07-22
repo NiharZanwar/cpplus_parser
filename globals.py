@@ -24,11 +24,5 @@ alarm_master = {
     }
 }
 
-log_dir = "/data/log/"  # todo: change while making docker
-from os import getcwd
-config_dir = '/data'  # todo: change while making docker
-
-
-error_code = {
-
-}
+log_dir = "/logs"
+config_dir = '/config'

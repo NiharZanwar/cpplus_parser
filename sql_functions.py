@@ -17,8 +17,8 @@ def get_config(path):
         config = configparser.ConfigParser()
         config.read(path + "/config.conf")
         return config
-    except:
-        log_error("error while opening config file. check if file is present in directory {}".format(path))
+    except Exception as error:
+        log_error("error while opening config file. {}".format(error))
         return 0
 
 
@@ -129,7 +129,6 @@ def add_alarm(sql_details, device_id, channel_no, alarm_code, alarm_name, alarm_
                                                                           str(create_dt),
                                                                           str(alarm_name), str(panel_code)))
             connection.commit()
-            # print(cursor.lastrowid)
             connection.close()
             return int(cursor.lastrowid)
         except pymysql.Error as e:
@@ -201,18 +200,18 @@ def update_alarm(sql_details, device_id, alarm_code, alarm_status, channel_no, d
             return 0
 
 
-def print_json(http_details, tag, time, eventcode, channel, alarm_state):
+def print_json(http_details, panel_code, time, eventcode, channel, alarm_state):
     response = {
         "HE": {
-            "ID": tag,
+            "ID": panel_code,
         },
         "TX": []
     }
     TX = {
-            "DT": str(time),
-            "EN": "",
-            "CMNT": ""
-        }
+        "DT": str(time),
+        "EN": "",
+        "CMNT": ""
+    }
 
     if alarm_master[eventcode]['channel_specific']:
 
@@ -294,7 +293,7 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                             if update_alarm(sql_details, device_info['device_id'], alarm, 0, 0, time) == 0:
                                 return 206
 
-                            if print_json(sql_details,tag, time, alarm_code, 0, 1) == 0:
+                            if print_json(sql_details, tag, time, alarm_code, 0, 1) == 0:
                                 if add_transaction(sql_details, time, device_info['device_id'], alarm_id, 0, alarm_code,
                                                    alarm_master[alarm]["name"], 0, 0) == 0:
                                     return 207
@@ -362,7 +361,6 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                                     return 214
 
                     else:
-
                         alarm_info, success = get_alarm_info(sql_details, device_info['device_id'], 0, alarm_code)
                         if success == 0:
                             return 215
@@ -370,7 +368,6 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
 
                         if update_alarm(sql_details, device_info['device_id'], alarm_code, 0, 0,
                                         time) == 0:
-                            # TODO:finalize what to do for non channel specific alarms, whether to give alarm state 1
                             return 216
                         if print_json(sql_details, tag, time, alarm_code, 0, 1) == 0:
                             if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], 0,
