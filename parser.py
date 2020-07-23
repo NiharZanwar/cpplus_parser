@@ -42,7 +42,7 @@ def handle_data(data, dvr_ip):
     sql_details = get_sql_details()
 
     config = get_config(config_dir)
-    if config['mode']['consider_ip_as_tag'] == 1:
+    if config['mode']['consider_ip_as_tag'] == '1':
         domain = str(dvr_ip)
 
     result = process_data2(sql_details, time, int(alarm_type), domain, channel_string,

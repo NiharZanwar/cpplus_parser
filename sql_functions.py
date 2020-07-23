@@ -85,7 +85,7 @@ def get_device_info(sql_details, tag):
     else:
         try:
             cursor = connection.cursor()
-            cursor.execute("SELECT * FROM `cpplus_device_dvr` WHERE tag='{}'".format((str(tag))))
+            cursor.execute("SELECT * FROM `cpplus_device_dvr` WHERE ip='{}'".format((str(tag))))
             response = cursor.fetchall()
             connection.close()
             return response, 1
@@ -129,6 +129,7 @@ def add_alarm(sql_details, device_id, channel_no, alarm_code, alarm_name, alarm_
                                                                           str(create_dt),
                                                                           str(alarm_name), str(panel_code)))
             connection.commit()
+            # print(cursor.lastrowid)
             connection.close()
             return int(cursor.lastrowid)
         except pymysql.Error as e:
@@ -287,7 +288,7 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
 
                     if not alarm_master[alarm]["channel_specific"]:
                         alarm_id = add_alarm(sql_details, device_info["device_id"], 0, alarm,
-                                             alarm_master[alarm]["name"], 0, time, tag)
+                                             alarm_master[alarm]["name"], 0, time, device_info["tag"])
                         if alarm_id is not 0 and int(alarm_code) == alarm:
 
                             if update_alarm(sql_details, device_info['device_id'], alarm, 0, 0, time) == 0:
@@ -309,7 +310,7 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                     else:
                         for i in range(1, device_info["channel_no"] + 1):
                             alarm_id = add_alarm(sql_details, device_info["device_id"], i, alarm,
-                                                 alarm_master[alarm]["name"], 0, time, tag)
+                                                 alarm_master[alarm]["name"], 0, time, device_info["tag"])
 
                             if alarm_id is not 0 and int(alarm_code) == alarm:
                                 if update_alarm(sql_details, device_info['device_id'], alarm, channel_string[i - 1], i,
