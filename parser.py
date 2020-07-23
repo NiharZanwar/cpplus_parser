@@ -1,7 +1,7 @@
 import socketserver
 
 from sql_functions import *
-from globals import log_dir, error_code, config_dir
+from globals import log_dir, config_dir
 from datetime import datetime
 from time import sleep
 

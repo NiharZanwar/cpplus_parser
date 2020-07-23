@@ -27,7 +27,3 @@ alarm_master = {
 log_dir = "."  # todo: change while making docker
 config_dir = '.'  # todo: change while making docker
 
-
-error_code = {
-
-}
