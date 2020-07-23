@@ -8,7 +8,7 @@ from time import sleep
 
 def make_log(string):
     string += "\n"
-    with open(log_dir + "log.txt", "a") as f:
+    with open(log_dir + "/log.txt", "a") as f:
         f.write(string)
 
 
