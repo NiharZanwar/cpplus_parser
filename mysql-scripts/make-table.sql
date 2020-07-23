@@ -31,6 +31,7 @@ create table cpplus_alarm_dvr
     add_info       varchar(45) null,
     create_dt      datetime    null,
     last_update_dt datetime    null,
+    panel_code     int         null,
     constraint device_id
         foreign key (device_id) references cpplus_device_dvr (device_id)
 );
@@ -47,7 +48,9 @@ create table cpplus_txn_dvr
     alarm_code  varchar(45) not null,
     alarm_name  varchar(45) null,
     alarm_state int         null,
-    add_info    varchar(45) null
+    add_info    varchar(45) null,
+    event_code  varchar(20) null,
+    alarm_sent  int         null
 );
 
 
