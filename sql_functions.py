@@ -232,7 +232,9 @@ def print_json(http_details, panel_code, time, eventcode, channel, alarm_state):
         TX["CMNT"] = "Channel " + str(channel)
         response["TX"].append(TX)
     try:
+        print(response)
         http_response = post(http_details["http"], json=response)
+        print(http_response.text)
         if http_response.status_code == 200:
             resp_json = json.loads(http_response.text)
             if resp_json["Status"] == 'Fail':
