@@ -274,6 +274,9 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
 
         elif device_info['is_active'] == 1 and device_info['channel_no'] is not None:
 
+            if update_dt(sql_details, device_info['tag'], time) == 0:
+                return 204
+
             if alarm_master[int(alarm_code)]["channel_specific"]:
                 check_value = 1
             else:
