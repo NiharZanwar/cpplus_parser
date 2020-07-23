@@ -299,7 +299,7 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                             if update_alarm(sql_details, device_info['device_id'], alarm, 0, 0, time) == 0:
                                 return 206
 
-                            if print_json(sql_details, tag, time, alarm_code, 0, 1) == 0:
+                            if print_json(sql_details, device_info['tag'], time, alarm_code, 0, 1) == 0:
                                 if add_transaction(sql_details, time, device_info['device_id'], alarm_id, 0, alarm_code,
                                                    alarm_master[alarm]["name"], 0, 0) == 0:
                                     return 207
@@ -321,7 +321,7 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                                 if update_alarm(sql_details, device_info['device_id'], alarm, channel_string[i - 1], i,
                                                 time) == 0:
                                     return 209
-                                if print_json(sql_details, tag, time, alarm_code, i, channel_string[i - 1]) == 0:
+                                if print_json(sql_details, device_info['tag'], time, alarm_code, i, channel_string[i - 1]) == 0:
                                     if add_transaction(sql_details, time, device_info['device_id'], alarm_id, i,
                                                        alarm_code,
                                                        alarm_master[alarm]["name"], channel_string[i - 1], 0) == 0:
@@ -352,7 +352,7 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                                             time) == 0:
                                 return 213
 
-                            if print_json(sql_details, tag, time, alarm_code, i, channel_string[i - 1]) == 0:
+                            if print_json(sql_details, device_info['tag'], time, alarm_code, i, channel_string[i - 1]) == 0:
                                 if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'],
                                                    i,
                                                    alarm_code,
@@ -375,7 +375,7 @@ def process_data2(sql_details, time, alarm_code, tag, channel_string, dvr_ip, da
                         if update_alarm(sql_details, device_info['device_id'], alarm_code, 0, 0,
                                         time) == 0:
                             return 216
-                        if print_json(sql_details, tag, time, alarm_code, 0, 1) == 0:
+                        if print_json(sql_details, device_info['tag'], time, alarm_code, 0, 1) == 0:
                             if add_transaction(sql_details, time, device_info['device_id'], alarm_info['alarm_id'], 0,
                                                alarm_code,
                                                alarm_master[alarm_code]["name"], 0, 0) == 0:
