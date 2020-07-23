@@ -7,5 +7,5 @@ git checkout docker-version
 cd /app/cpplus_parser
 python parser.py &
 ps -aef
-cd /data/log;
+cd /logs
 python -m http.server 8008
