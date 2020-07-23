@@ -3,7 +3,7 @@ FROM python:3
 
 RUN apt-get update
 RUN	mkdir /app /config /logs
-RUN	pip install pymysql configparser cryptography
+RUN	pip install pymysql configparser cryptography requests
 
 COPY install.sh /app
 
