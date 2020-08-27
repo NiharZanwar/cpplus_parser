@@ -204,7 +204,7 @@ def update_alarm(sql_details, device_id, alarm_code, alarm_status, channel_no, d
 def print_json(http_details, panel_code, time, eventcode, channel, alarm_state):
     response = {
         "HE": {
-            "ID": panel_code,
+            "Panelnumber": panel_code,
         },
         "TX": []
     }

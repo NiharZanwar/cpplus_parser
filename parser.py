@@ -1,5 +1,5 @@
 import socketserver
-
+from os import system
 from sql_functions import *
 from globals import log_dir, config_dir
 from datetime import datetime
@@ -63,6 +63,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 if __name__ == "__main__":
 
     while True:
+        system("git describe --tags")
         sql_details = get_sql_details()
         if sql_details == 0:
             log_error("could not find sql details file while initializing. check if config file exists in {}"
