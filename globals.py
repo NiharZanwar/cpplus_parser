@@ -10,12 +10,12 @@ alarm_master = {
     #     "name": "motion detect",
     #     "channel_specific": True
     # },
-    4: {
-        "error_code":"CCB",
-        "ok_code":"CCO",
-        "name": "tampering/mask",
-        "channel_specific": True
-    },
+    #4: {
+     #   "error_code":"CCB",
+      #  "ok_code":"CCO",
+       # "name": "tampering/mask",
+        #"channel_specific": True
+    #},
     3: {
         "error_code":"CNV",
         "ok_code":"CNO",
