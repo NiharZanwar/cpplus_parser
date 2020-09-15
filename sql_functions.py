@@ -214,6 +214,9 @@ def print_json(http_details, panel_code, time, eventcode, channel, alarm_state):
         "CMNT": ""
     }
 
+    if eventcode == 4: # Disabling this temporarily (Masking Alarm)
+        return 0
+
     if alarm_master[eventcode]['channel_specific']:
 
         if int(alarm_state) == 1:
